@@ -1,145 +1,25 @@
 package com.yuraiz.converter.ui.views
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.Backspace
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.yuraiz.converter.handleButtonClick
-import java.lang.NumberFormatException
 
-@Composable
-fun ConverterViewOld(options: Map<String, Double>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        val rowCount = 3
-
-        var number by remember { mutableStateOf(0.0) }
-
-        val selected by remember {
-            mutableStateOf(
-                options.keys.take(rowCount).toMutableList()
-            )
-        }
-
-        for (index in 0 until rowCount) {
-            Row(
-                modifier = Modifier
-                    .height(72.dp)
-                    .padding(8.dp)
-            ) {
-
-                val factor = options[selected[index]]!!
-
-                Box(
-                    modifier = Modifier
-                        .width(140.dp)
-                        .fillMaxHeight()
-                ) {
-
-                    var expanded by remember { mutableStateOf(false) }
-
-                    TextButton(
-                        onClick = { expanded = !expanded },
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .fillMaxSize()
-                    ) {
-                        Text(selected[index])
-                        Icon(Icons.Outlined.ArrowDropDown, null)
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        options.keys.forEach { option ->
-                            if (option in selected) {
-                                return@forEach
-                            }
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    selected[index] = option
-                                    expanded = false
-                                }
-                            ) {
-                                Text(text = option)
-                            }
-                        }
-                    }
-                }
-
-                var focused by remember {
-                    mutableStateOf(false)
-                }
-
-                var error by remember {
-                    mutableStateOf(false)
-                }
-
-                fun Double.beautyFormat(): String {
-                    var string = String.format("%.10f", this)
-                    if ('.' in string) {
-                        string = string.dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
-                    }
-                    return string
-                }
-
-                var text by if (focused) {
-                    remember(factor) {
-                        mutableStateOf((number / factor).beautyFormat())
-                    }
-                } else {
-                    remember(number, factor) {
-                        mutableStateOf((number / factor).beautyFormat())
-                    }
-                }
-
-                OutlinedTextField(
-                    value = text,
-                    singleLine = true,
-                    onValueChange = {
-                        try {
-                            number = it.toDouble() * factor
-                            error = false
-                        } catch (format: NumberFormatException) {
-                            error = true
-                        }
-
-                        text = it
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    modifier = Modifier.onFocusChanged {
-                        focused = it.isFocused
-                    },
-                    isError = error
-                )
-            }
-
-        }
-    }
-}
-
+import androidx.compose.material.icons.Icons.Outlined as Icons
+//import androidx.compose.material.icons.outlined.Backspace
+import androidx.compose.ui.graphics.Color
 
 
 @Composable
@@ -151,7 +31,8 @@ fun ConverterView(options: Map<String, Double>) {
     Column(
         modifier = Modifier
             .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom,
     ) {
         val rowCount = 3
 
@@ -183,11 +64,14 @@ fun ConverterView(options: Map<String, Double>) {
                     TextButton(
                         onClick = { expanded = !expanded },
                         modifier = Modifier
-                            .align(Alignment.BottomStart)
+
                             .fillMaxSize()
                     ) {
-                        Text(selected[index])
-                        Icon(Icons.Outlined.ArrowDropDown, null)
+                        Text(
+                            selected[index],
+                            //                                textAlign = TextAlign.Left,
+                        )
+                        Icon(Icons.ArrowDropDown, null)
                     }
 
                     DropdownMenu(
@@ -215,62 +99,69 @@ fun ConverterView(options: Map<String, Double>) {
                     mutableStateOf(false)
                 }
 
-                var error by remember {
-                    mutableStateOf(false)
-                }
-
                 fun Double.beautyFormat(): String {
                     var string = String.format("%.10f", this)
+                    string.dropWhile { it == '0' }
                     if ('.' in string) {
                         string = string.dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
                     }
                     return string
                 }
 
-                var text by if (focused) {
-                    remember(factor) {
-                        mutableStateOf((number / factor).beautyFormat())
-                    }
+                val text by if (focused) {
+                    input
                 } else {
                     remember(number, factor) {
                         mutableStateOf((number / factor).beautyFormat())
                     }
                 }
 
-                OutlinedTextField(
-                    value = text,
-                    singleLine = true,
-                    onValueChange = {
-                        try {
-                            number = it.toDouble() * factor
-                            error = false
-                        } catch (format: NumberFormatException) {
-                            error = true
-                        }
+                if (focused) {
+                    number = (text.toDoubleOrNull() ?: 1.0) * factor
+                }
 
-                        text = it
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
+                OutlinedTextField(
+                    value = if (text != "") text else "1",
+                    singleLine = true,
+                    readOnly = true,
+                    onValueChange = { },
                     modifier = Modifier.onFocusChanged {
                         focused = it.isFocused
+                        if (focused) {
+                            input.value = ""
+                        }
                     },
-                    isError = error
+                    textStyle = if (text != "") {
+                        TextStyle.Default
+                    } else {
+                        TextStyle.Default.copy(color = Color.Gray)
+                    }
                 )
             }
-
         }
         Keypad(input)
     }
 }
 
+fun handleButtonClick(
+    buttonText: String,
+    inputTextView: MutableState<String>,
+) {
+    when (buttonText) {
+        "." -> if ('.' !in inputTextView.value) {
+            inputTextView.value += '.'
+        }
+        "DEL" -> inputTextView.value = inputTextView.value.dropLast(1)
 
+        else -> inputTextView.value += buttonText
+    }
+}
 
 @Composable
 fun Keypad(input: MutableState<String>) {
     val callback = { text: String ->
         handleButtonClick(text, input)
+        input.value = input.value.dropWhile { it == '0' }
     }
 
     @Composable
@@ -285,13 +176,20 @@ fun Keypad(input: MutableState<String>) {
                 Button(
                     modifier = Modifier
                         .padding(2.dp)
-                        .height(120.dp)
+                        .height(100.dp)
                         .clip(CircleShape)
                         .weight(1f),
 
                     onClick = { callback(it) }
                 ) {
-                    Text(it, style = MaterialTheme.typography.h3)
+                    when (it) {
+                        "DEL" -> Icon(
+                            Icons.Backspace,
+                            "delete",
+                            modifier = Modifier.size(32.dp)
+                        )
+                        else -> Text(it, style = MaterialTheme.typography.h3)
+                    }
                 }
             }
         }
@@ -299,13 +197,11 @@ fun Keypad(input: MutableState<String>) {
 
     Column(
         modifier = Modifier
-            .background(color = MaterialTheme.colors.surface)
             .padding(16.dp)
-
     ) {
         NumKeypadRow(
             listOf("7", "8", "9"),
-            callback
+            callback,
         )
         NumKeypadRow(
             listOf("4", "5", "6"),
@@ -325,7 +221,6 @@ fun Keypad(input: MutableState<String>) {
 @Composable
 fun ConverterView(vararg options: Pair<String, Double>) =
     ConverterView(mapOf(*options))
-
 
 @Preview(showBackground = true)
 @Composable

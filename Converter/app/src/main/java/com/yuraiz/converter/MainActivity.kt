@@ -12,16 +12,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.yuraiz.converter.ui.theme.ConverterTheme
 import com.yuraiz.converter.ui.drawer.Drawer
 import com.yuraiz.converter.ui.drawer.Page
-import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
 
-
-import androidx.compose.material.icons.Icons.Outlined
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.material.icons.Icons.Outlined as Icons
+import com.yuraiz.converter.ui.views.ConverterView
+import kotlin.math.pow
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,145 +27,88 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Drawer(
-                        Page(Outlined.AccountBox, "Hello") {
-                            Text("Hello")
-                        },
-                        Page(Outlined.Face, "Bye") {
-                            Text("Bye")
-                        }
-                    )
+                    Content()
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun Content() {
-    val input = remember { mutableStateOf("") }
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colors.background),
-        contentAlignment = Alignment.TopStart
-
-    ) {
-        val width = 600.dp
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colors.surface)
-        ) {
-            Column(
-                modifier = Modifier
-                    .width(width)
-            ) {
-
-                Text(input.value)
-                Spacer(modifier = Modifier.height(16.dp))
-                Keypad(input)
-            }
-        }
-    }
+    Drawer(
+        volumePage(),
+        lengthPage(),
+        dataPage(),
+    )
 }
 
-@Composable
-fun Keypad(input: MutableState<String>) {
-    val callback = { text: String ->
-        handleButtonClick(text, input)
-    }
-
-    @Composable
-    fun NumKeypadRow(
-        texts: List<String>,
-        callback: (text: String) -> Any
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            texts.forEach {
-                Button(
-                    modifier = Modifier
-                        .padding(2.dp)
-                        .height(120.dp)
-                        .clip(CircleShape)
-                        .weight(1f),
-
-                    onClick = { callback(it) }
-                ) {
-                    Text(it, style = MaterialTheme.typography.h3)
-                }
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .background(color = MaterialTheme.colors.surface)
-            .padding(16.dp)
-
-    ) {
-        NumKeypadRow(
-            listOf("7", "8", "9"),
-            callback
-        )
-        NumKeypadRow(
-            listOf("4", "5", "6"),
-            callback
-        )
-        NumKeypadRow(
-            listOf("1", "2", "3"),
-            callback
-        )
-        NumKeypadRow(
-            listOf(".", "0", "DEL"),
-            callback
-        )
-    }
-}
-
-@Composable
-fun NumKeypadRow(
-    texts: List<String>,
-    callback: (text: String) -> Any
+fun volumePage() = Page(
+    Icons.SportsBar,
+    "Volume"
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        texts.forEach {
-            Button(
-                modifier = Modifier
-                    .padding(2.dp)
-                    .height(120.dp)
-                    .clip(CircleShape)
-                    .weight(1f),
-
-                onClick = { callback(it) }
-            ) {
-                Text(it, style = MaterialTheme.typography.h3)
-            }
-        }
-    }
+    ConverterView(
+        "milliliter" to 1.0,
+        "pinch" to 0.3080576,
+        "liter" to 1000.0,
+        "teaspoon" to 4.92892159375,
+        "tablespoon" to 14.78676478125,
+        "cup" to 236.588237,
+        "pint" to 473.176473,
+        "quart" to 946.352946,
+        "gallon" to 3785.411784,
+    )
 }
 
-
-fun handleButtonClick(
-    buttonText: String,
-    inputTextView: MutableState<String>,
+fun lengthPage() = Page(
+    Icons.SocialDistance,
+    "Distance"
 ) {
-    when (buttonText) {
-        "." -> if ('.' !in inputTextView.value) {
-            inputTextView.value += '.'
-        }
-        "DEL" -> inputTextView.value = inputTextView.value.dropLast(1)
+    ConverterView(
+        // Metric
+        "meter" to 1.0,
+        "picometer" to 1e-6,
+        "millimeter" to 1e-3,
+        "centimeter" to 1e-2,
+        "kilometer" to 1e3,
 
-        else -> inputTextView.value += buttonText
-    }
+        // Imperial
+        "inch" to 0.0254,
+        "foot" to 0.3048,
+        "yard" to 0.9144,
+        "mile" to 1609.344,
+
+        // Marine
+        "nautical mile" to 1852.0,
+    )
 }
 
-//@OptIn(ExperimentalMaterialApi::class)
+fun dataPage() = Page(
+    Icons.Save,
+    "Data"
+) {
+    ConverterView(
+        "bit" to 1.0,
+        "byte" to 8.0,
+
+        // SI prefixes
+        "kilobyte" to 8e3,
+        "megabyte" to 8e6,
+        "gigabyte" to 8e9,
+        "terabyte" to 8e12,
+        "petabyte" to 8e15,
+        "exabyte" to 8e18,
+
+        // Binary prefixes
+        "kibibyte" to 8.0 * 2.0.pow(10),
+        "mebibyte" to 8.0 * 2.0.pow(20),
+        "gibibyte" to 8.0 * 2.0.pow(30),
+        "tebibyte" to 8.0 * 2.0.pow(40),
+        "pebibyte" to 8.0 * 2.0.pow(50),
+        "exbibyte" to 8.0 * 2.0.pow(60),
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
